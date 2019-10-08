@@ -718,4 +718,65 @@ Text GLabel 5450 5650 2    50   Input ~ 0
 CTRL_DOWN
 Text GLabel 5450 5550 2    50   Input ~ 0
 CTRL_UP
+$Comp
+L power:+VDC #PWR0124
+U 1 1 5D9D5F4B
+P 3600 3100
+F 0 "#PWR0124" H 3600 3000 50  0001 C CNN
+F 1 "+VDC" H 3600 3375 50  0000 C CNN
+F 2 "" H 3600 3100 50  0001 C CNN
+F 3 "" H 3600 3100 50  0001 C CNN
+	1    3600 3100
+	1    0    0    -1  
+$EndComp
+Text GLabel 5450 4950 2    50   Input ~ 0
+VMOT
+Text GLabel 3200 3400 3    50   Input ~ 0
+VMOT
+$Comp
+L Device:R_Small R4
+U 1 1 5D9D6127
+P 3350 3200
+F 0 "R4" V 3154 3200 50  0000 C CNN
+F 1 "10.2k" V 3245 3200 50  0000 C CNN
+F 2 "coddingtonbear:0805_Milling" H 3350 3200 50  0001 C CNN
+F 3 "~" H 3350 3200 50  0001 C CNN
+	1    3350 3200
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Device:R_Small R3
+U 1 1 5D9D61B7
+P 3050 3200
+F 0 "R3" V 2854 3200 50  0000 C CNN
+F 1 "3.4k" V 2945 3200 50  0000 C CNN
+F 2 "coddingtonbear:0805_Milling" H 3050 3200 50  0001 C CNN
+F 3 "~" H 3050 3200 50  0001 C CNN
+	1    3050 3200
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:GND #PWR0125
+U 1 1 5D9D7D88
+P 2800 3200
+F 0 "#PWR0125" H 2800 2950 50  0001 C CNN
+F 1 "GND" H 2805 3027 50  0000 C CNN
+F 2 "" H 2800 3200 50  0001 C CNN
+F 3 "" H 2800 3200 50  0001 C CNN
+	1    2800 3200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3600 3100 3600 3200
+Wire Wire Line
+	3600 3200 3450 3200
+Wire Wire Line
+	2800 3200 2950 3200
+Wire Wire Line
+	3150 3200 3200 3200
+Wire Wire Line
+	3200 3200 3200 3400
+Connection ~ 3200 3200
+Wire Wire Line
+	3200 3200 3250 3200
 $EndSCHEMATC

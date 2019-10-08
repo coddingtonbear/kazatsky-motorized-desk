@@ -2,7 +2,7 @@
 
   (general
     (thickness 1.6)
-    (drawings 3)
+    (drawings 7)
     (tracks 303)
     (zones 0)
     (modules 21)
@@ -60,7 +60,7 @@
     (pad_drill 0.762)
     (pad_to_mask_clearance 0.051)
     (solder_mask_min_width 0.25)
-    (aux_axis_origin 155 105.5)
+    (aux_axis_origin 149 106)
     (visible_elements FFFFFF7F)
     (pcbplotparams
       (layerselection 0x010fc_ffffffff)
@@ -1020,6 +1020,10 @@
       (net 1 GND))
   )
 
+  (gr_line (start 149 67) (end 149 106) (layer Edge.Cuts) (width 0.15))
+  (gr_line (start 216 67) (end 149 67) (layer Edge.Cuts) (width 0.15))
+  (gr_line (start 216 106) (end 216 67) (layer Edge.Cuts) (width 0.15))
+  (gr_line (start 149 106) (end 216 106) (layer Edge.Cuts) (width 0.15))
   (gr_text HALL (at 202.8 100.4 270) (layer B.Cu)
     (effects (font (size 1.5 1.5) (thickness 0.3)) (justify mirror))
   )
