@@ -2,7 +2,7 @@
 
   (general
     (thickness 1.6)
-    (drawings 7)
+    (drawings 10)
     (tracks 334)
     (zones 0)
     (modules 23)
@@ -1070,6 +1070,15 @@
       (net 1 GND))
   )
 
+  (gr_text "kazatsky\ndesk controller" (at 152.7 86 270) (layer B.Cu)
+    (effects (font (size 1.5 1.5) (thickness 0.3)) (justify mirror))
+  )
+  (gr_text @coddingtonbear (at 213 86.6 90) (layer B.Cu)
+    (effects (font (size 1.5 1.5) (thickness 0.3)) (justify mirror))
+  )
+  (gr_text 2019-10-07 (at 213.1 86.3 90) (layer F.Cu)
+    (effects (font (size 1.5 1.5) (thickness 0.3)))
+  )
   (gr_line (start 149 67) (end 149 106) (layer Edge.Cuts) (width 0.15))
   (gr_line (start 216 67) (end 149 67) (layer Edge.Cuts) (width 0.15))
   (gr_line (start 216 106) (end 216 67) (layer Edge.Cuts) (width 0.15))
