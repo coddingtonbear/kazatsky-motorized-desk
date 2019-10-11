@@ -1,0 +1,3 @@
+[submodule "firmware/lib/BTS7960Library"]
+	path = firmware/lib/BTS7960Library
+	url = git@github.com:coddingtonbear/BTS7960Library.git
