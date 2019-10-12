@@ -1,12 +1,12 @@
 #include <Arduino.h>
 #include <BTS7960.h>
 
-#define BUTTON_UP PD3
-#define BUTTON_DOWN PD4
+#define BUTTON_UP PD4
+#define BUTTON_DOWN PD3
 
 #define MOT_L_EN PD7
 #define MOT_L_PWM PD5
-#define MOT_R_EN PB1
+#define MOT_R_EN PD2
 #define MOT_R_PWM PD6
 
 #define MOT_PWR_VOLTAGE PC5
@@ -19,7 +19,7 @@ BTS7960 motor(MOT_R_PWM, MOT_L_PWM, MOT_L_EN, MOT_R_EN);
 void setup() {
 	pinMode(BUTTON_UP, INPUT_PULLUP);
 	pinMode(BUTTON_DOWN, INPUT_PULLUP);
-
+	
 	motor.stop();
 	motor.disable();
 
@@ -40,7 +40,6 @@ void loop() {
 		motor.setSpeed(-1 * SPEED);
 	} else {
 		motor.stop();
-		motor.disable();
 	}
 	delay(100);
 }
