@@ -1,3 +1,6 @@
 [submodule "firmware/lib/BTS7960Library"]
 	path = firmware/lib/BTS7960Library
 	url = git@github.com:coddingtonbear/BTS7960Library.git
+[submodule "firmware/lib/Arduino-SerialCommand"]
+	path = firmware/lib/Arduino-SerialCommand
+	url = git@github.com:coddingtonbear/Arduino-SerialCommand.git

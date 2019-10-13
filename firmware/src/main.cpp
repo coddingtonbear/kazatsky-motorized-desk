@@ -1,6 +1,9 @@
 #include <Arduino.h>
 #include <EEPROM.h>
 #include <BTS7960.h>
+#include <SerialCommand.h>
+
+#include "main.h"
 
 #define BUTTON_UP 3
 #define BUTTON_DOWN 4
@@ -18,6 +21,8 @@
 BTS7960 motor(MOT_R_PWM, MOT_L_PWM, MOT_L_EN, MOT_R_EN);
 
 #define SPEED 255
+
+SerialCommand cmd;
 
 int lastHallState = HIGH;
 bool up = true;
@@ -42,12 +47,52 @@ void handleMotorPosition() {
 	lastHallState = currentHallState;
 }
 
+void cmdUnrecognized(const char*) {
+	Serial.println("Unrecognized command");
+}
+
+void cmdGetPosition() {
+	Serial.println(position);
+}
+
+void cmdToPosition() {
+	int target;
+
+	char* targetStr = cmd.next();
+	if(targetStr) {
+		target = atoi(targetStr);
+		toPosition(target);
+	}
+}
+
+void toPosition(int target) {
+	unsigned long timeout = millis() + 10000;
+
+	while(position != target && millis() < timeout) {
+		if(position > target) {
+			motorDown();
+		} else {
+			motorUp();
+		}
+
+		_loop();
+	}
+}
+
+void storePosition() {
+	EEPROM.write(EEPROM_POSITION, position);
+}
+
 void setup() {
 	pinMode(BUTTON_UP, INPUT_PULLUP);
 	pinMode(BUTTON_DOWN, INPUT_PULLUP);
 	pinMode(MOT_HALL, INPUT);
 
 	position = EEPROM.read(EEPROM_POSITION);
+
+	cmd.addCommand("to_position", cmdToPosition);
+	cmd.addCommand("get_position", cmdGetPosition);
+	cmd.setDefaultHandler(cmdUnrecognized);
 	
 	motor.stop();
 	motor.disable();
@@ -55,7 +100,26 @@ void setup() {
 	Serial.begin(9600);
 }
 
-void loop() {
+void motorUp() {
+	motor.enable();
+	motor.setSpeed(SPEED);
+	isMoving = true;
+	up = true;
+}
+
+void motorDown() {
+	motor.enable();
+	motor.setSpeed(-1 * SPEED);
+	isMoving = true;
+	up = false;
+}
+
+void motorStop() {
+	isMoving = false;
+	motor.stop();
+}
+
+void _loop() {
 	if(millis() - lastButtonCheck > 100) {
 		wasMoving = isMoving;
 		lastButtonCheck = millis();
@@ -63,25 +127,22 @@ void loop() {
 			position = 0;
 			isMoving = false;
 		} else if (digitalRead(BUTTON_UP) == LOW) {
-			//Serial.println("UP");
-			motor.enable();
-			motor.setSpeed(SPEED);
-			isMoving = true;
-			up = true;
+			motorUp();
 		} else if (digitalRead(BUTTON_DOWN) == LOW) {
-			//Serial.println("DOWN");
-			motor.enable();
-			motor.setSpeed(-1 * SPEED);
-			isMoving = true;
-			up = false;
+			motorDown();
 		} else {
-			isMoving = false;
-			motor.stop();
+			motorStop();
 		}
 		if(wasMoving && !isMoving) {
-			EEPROM.write(EEPROM_POSITION, position);
+			storePosition();
 		}
 	}
 
 	handleMotorPosition();
+}
+
+void loop() {
+	cmd.readSerial();
+
+	_loop();
 }
