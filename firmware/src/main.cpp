@@ -65,6 +65,18 @@ void cmdToPosition() {
 	}
 }
 
+void cmdResetPosition() {
+	position = 0;
+	storePosition();
+}
+
+void cmdGetVoltage() {
+	uint8_t reading = analogRead(MOT_PWR_VOLTAGE);
+	double voltage = (reading / 1024.0) * 20;
+
+	Serial.println(voltage);
+}
+
 void toPosition(int target) {
 	unsigned long timeout = millis() + 10000;
 
@@ -92,6 +104,8 @@ void setup() {
 
 	cmd.addCommand("to_position", cmdToPosition);
 	cmd.addCommand("get_position", cmdGetPosition);
+	cmd.addCommand("reset_position", cmdResetPosition);
+	cmd.addCommand("get_voltage", cmdGetVoltage);
 	cmd.setDefaultHandler(cmdUnrecognized);
 	
 	motor.stop();
