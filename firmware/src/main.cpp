@@ -5,6 +5,10 @@
 
 #include "main.h"
 
+#define BASELINE_HEIGHT 72
+#define POSITION_TO_MM 0.45
+#define POSITION_MAX 95
+
 #define BUTTON_UP 3
 #define BUTTON_DOWN 4
 
@@ -52,7 +56,11 @@ void cmdUnrecognized(const char*) {
 }
 
 void cmdGetPosition() {
-	Serial.println(position);
+	Serial.println(getPosition());
+}
+
+void cmdGetHeight() {
+	Serial.println(getHeight());
 }
 
 void cmdToPosition() {
@@ -62,6 +70,16 @@ void cmdToPosition() {
 	if(targetStr) {
 		target = atoi(targetStr);
 		toPosition(target);
+	}
+}
+
+void cmdToHeight() {
+	int target;
+
+	char* targetStr = cmd.next();
+	if(targetStr) {
+		target = atoi(targetStr);
+		toHeight(target);
 	}
 }
 
@@ -80,6 +98,10 @@ void cmdGetVoltage() {
 void toPosition(int target) {
 	unsigned long timeout = millis() + 10000;
 
+	if(target < 0 || target > POSITION_MAX) {
+		return;
+	}
+
 	while(position != target && millis() < timeout) {
 		if(position > target) {
 			motorDown();
@@ -89,6 +111,19 @@ void toPosition(int target) {
 
 		_loop();
 	}
+}
+
+float getHeight() {
+	return BASELINE_HEIGHT + (POSITION_TO_MM * getPosition());
+}
+
+int getPosition() {
+	return position;
+}
+
+void toHeight(float mm) {
+	int targetPosition = (mm - BASELINE_HEIGHT) / POSITION_TO_MM;
+	toPosition(targetPosition);
 }
 
 void storePosition() {
@@ -102,6 +137,8 @@ void setup() {
 
 	position = EEPROM.read(EEPROM_POSITION);
 
+	cmd.addCommand("to_height", cmdToHeight);
+	cmd.addCommand("get_height", cmdGetHeight);
 	cmd.addCommand("to_position", cmdToPosition);
 	cmd.addCommand("get_position", cmdGetPosition);
 	cmd.addCommand("reset_position", cmdResetPosition);
