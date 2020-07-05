@@ -9,12 +9,16 @@ void cmdGetVoltage();
 void motorUp();
 void motorDown();
 void motorStop();
+bool motorIsStalled();
+void refreshStallTimeout();
+void buttonLockout(bool lockout = true);
 
 float getHeight();
 void toHeight(float);
 int getPosition();
 void toPosition(int);
 void handleMotorPosition();
+void resetPosition();
 void storePosition();
 
 void setup();
