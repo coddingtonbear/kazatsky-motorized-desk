@@ -495,29 +495,10 @@ F 3 "" H 4350 1400 50  0001 C CNN
 	1    4350 1400
 	1    0    0    -1  
 $EndComp
-$Comp
-L Device:CP C1
-U 1 1 5D9CBBEC
-P 2550 1500
-F 0 "C1" H 2668 1546 50  0000 L CNN
-F 1 "10u" H 2668 1455 50  0000 L CNN
-F 2 "coddingtonbear:CP_Tantalum_Case-D_EIA-7343-31_Milling" H 2588 1350 50  0001 C CNN
-F 3 "~" H 2550 1500 50  0001 C CNN
-	1    2550 1500
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
-	2450 1350 2550 1350
+	2150 1650 2150 1750
 Wire Wire Line
-	2550 1350 2700 1350
-Connection ~ 2550 1350
-Wire Wire Line
-	2550 1650 2150 1650
-Wire Wire Line
-	2150 1650 2150 1800
-Connection ~ 2150 1650
-Wire Wire Line
-	1850 1350 1550 1350
+	1850 1350 1650 1350
 Text GLabel 2250 5550 2    50   Output ~ 0
 L_PWM
 Text GLabel 2250 5650 2    50   Output ~ 0
@@ -675,4 +656,43 @@ Wire Wire Line
 	2250 4450 3850 4450
 Wire Wire Line
 	3850 1800 3850 4450
+$Comp
+L Device:CP C5
+U 1 1 604D709B
+P 1650 1500
+F 0 "C5" H 1768 1546 50  0000 L CNN
+F 1 "100u" H 1768 1455 50  0000 L CNN
+F 2 "Capacitor_SMD:CP_Elec_6.3x5.4" H 1688 1350 50  0001 C CNN
+F 3 "~" H 1650 1500 50  0001 C CNN
+	1    1650 1500
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:CP C6
+U 1 1 604D776E
+P 2700 1500
+F 0 "C6" H 2818 1546 50  0000 L CNN
+F 1 "100u" H 2818 1455 50  0000 L CNN
+F 2 "Capacitor_SMD:CP_Elec_6.3x5.4" H 2738 1350 50  0001 C CNN
+F 3 "~" H 2700 1500 50  0001 C CNN
+	1    2700 1500
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2450 1350 2700 1350
+Connection ~ 2700 1350
+Connection ~ 1650 1350
+Wire Wire Line
+	1650 1350 1550 1350
+Wire Wire Line
+	1650 1650 1650 1750
+Wire Wire Line
+	1650 1750 2150 1750
+Connection ~ 2150 1750
+Wire Wire Line
+	2150 1750 2150 1800
+Wire Wire Line
+	2700 1650 2700 1750
+Wire Wire Line
+	2700 1750 2150 1750
 $EndSCHEMATC
