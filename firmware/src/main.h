@@ -22,6 +22,8 @@ void handleMotorPosition();
 void resetPosition();
 void storePosition();
 
+void tick(uint8_t count = 1);
+
 void setup();
 void loop();
 void _loop();

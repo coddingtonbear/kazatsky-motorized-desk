@@ -33,7 +33,11 @@
 
 BTS7960 motor(MOT_R_PWM, MOT_L_PWM, MOT_L_EN, MOT_R_EN);
 
-#define SPEED 128
+#define SPEED 175
+
+#define TICK_ON 100
+#define TICK_INTERVAL 25
+#define TICK_SPEED 1
 
 SerialCommand cmd;
 
@@ -71,10 +75,11 @@ void handleMotorPosition()
 {
     int limitTripped = digitalRead(LIMIT_MIN);
 
-    if (limitTripped == LOW && !up) {
+    if (limitTripped == LOW && !up && isMoving) {
         resetPosition();
         motorStop();
         buttonLockout();
+        tick(3);
     } else {
         buttonLockout(false);
     }
@@ -133,6 +138,21 @@ void cmdToPosition()
         target = atoi(targetStr);
         toPosition(target);
     }
+}
+
+void tick(uint8_t count)
+{
+    motor.setSpeed(TICK_SPEED);
+
+
+    for(uint8_t i = 0; i<count; i++) {
+        motor.enable();
+        delay(TICK_ON);
+        motor.disable();
+        delay(TICK_INTERVAL);
+    }
+
+    motor.setSpeed(SPEED);
 }
 
 void cmdToHeight()
@@ -207,6 +227,8 @@ void storePosition()
 void setup()
 {
     pinMode(LIMIT_MIN, INPUT_PULLUP);
+
+    tick(3);
 
     buttonUp.attach(BUTTON_UP, INPUT_PULLUP);
     buttonDown.attach(BUTTON_DOWN, INPUT_PULLUP);
