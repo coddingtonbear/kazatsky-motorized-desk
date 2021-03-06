@@ -15,6 +15,7 @@ void buttonLockout(bool lockout = true);
 
 float getHeight();
 void toHeight(float);
+bool positionHasChanged();
 int getPosition();
 void toPosition(int);
 void handleMotorPosition();

@@ -14,15 +14,18 @@
 #define BUTTON_DOWN 4
 #define BUTTON_DEBOUNCE_MS 25
 
-#define MOT_L_EN 7
+#define MOT_L_EN 23
 #define MOT_L_PWM 5
-#define MOT_R_EN 2
+#define MOT_R_EN 9
 #define MOT_R_PWM 6
 
-#define MOT_PWR_VOLTAGE A5
-#define MOT_HALL A1
+//#define MOT_PWR_VOLTAGE A5
+//#define ENABLE_HALL
+#define MOT_HALL 14
 #define MOT_HALL_DEBOUNCE_MS 25
 #define MOT_HALL_DEBOUNCE_STALL_TIMEOUT 250
+
+#define LIMIT_MIN 15
 
 #define EEPROM_STORE_MAGIC 24
 #define EEPROM_STORE_SIGNAL 99
@@ -37,6 +40,7 @@ SerialCommand cmd;
 int lastHallState = HIGH;
 bool up = true;
 uint8_t position = 0;
+uint8_t lastPosition = 0;
 
 bool isMoving = false;
 bool wasMoving = false;
@@ -65,26 +69,44 @@ void refreshStallTimeout()
 
 void handleMotorPosition()
 {
-    int currentHallState = hall.read();
+    int limitTripped = digitalRead(LIMIT_MIN);
 
-    if (lastHallState == HIGH && currentHallState == LOW) {
-        if (up) {
-            position++;
-        } else {
-            position--;
-        }
-    }
-
-    if (lastHallState != currentHallState) {
-        lastHallState = currentHallState;
-        refreshStallTimeout();
-    }
-
-    if (motorIsStalled()) {
+    if (limitTripped == LOW && !up) {
         resetPosition();
         motorStop();
         buttonLockout();
+    } else {
+        buttonLockout(false);
     }
+
+    #ifdef ENABLE_HALL
+        int currentHallState = hall.read();
+        lastPosition = position;
+
+        if (lastHallState == HIGH && currentHallState == LOW) {
+            if (up) {
+                position++;
+            } else {
+                position--;
+            }
+        }
+
+        if (lastHallState != currentHallState) {
+            lastHallState = currentHallState;
+            refreshStallTimeout();
+        }
+
+        if (motorIsStalled()) {
+            resetPosition();
+            motorStop();
+            buttonLockout();
+        }
+    #endif
+}
+
+bool positionHasChanged()
+{
+    return lastPosition != position;
 }
 
 void cmdUnrecognized(const char*)
@@ -135,14 +157,6 @@ void cmdResetPosition()
     resetPosition();
 }
 
-void cmdGetVoltage()
-{
-    uint8_t reading = analogRead(MOT_PWR_VOLTAGE);
-    double voltage = (reading / 1024.0) * 20;
-
-    Serial.println(voltage);
-}
-
 void toPosition(int target)
 {
     unsigned long timeout = millis() + 10000;
@@ -184,12 +198,16 @@ void toHeight(float mm)
 
 void storePosition()
 {
+    #ifdef ENABLE_HALL
     EEPROM.update(EEPROM_STORE_SIGNAL, EEPROM_STORE_MAGIC);
     EEPROM.update(EEPROM_POSITION, position);
+    #endif
 }
 
 void setup()
 {
+    pinMode(LIMIT_MIN, INPUT_PULLUP);
+
     buttonUp.attach(BUTTON_UP, INPUT_PULLUP);
     buttonDown.attach(BUTTON_DOWN, INPUT_PULLUP);
     hall.attach(MOT_HALL, INPUT);
@@ -199,7 +217,6 @@ void setup()
     cmd.addCommand("to_position", cmdToPosition);
     cmd.addCommand("get_position", cmdGetPosition);
     cmd.addCommand("reset_position", cmdResetPosition);
-    cmd.addCommand("get_voltage", cmdGetVoltage);
     cmd.setDefaultHandler(cmdUnrecognized);
 
     motor.stop();
@@ -255,29 +272,28 @@ void _loop()
 {
     buttonUp.update();
     buttonDown.update();
-    hall.update();
+    #ifdef ENABLE_HALL
+        hall.update();
+    #endif
 
     if (millis() - lastButtonCheck > 100) {
         int buttonUpState = buttonUp.read();
         int buttonDownState = buttonDown.read();
 
-        if ((buttonUpState == HIGH && buttonDownState == HIGH) && buttonsLocked) {
-            buttonsLocked = false;
-        }
-
         wasMoving = isMoving;
         lastButtonCheck = millis();
-        if (!buttonsLocked) {
-            if (buttonUpState == LOW && buttonDownState == LOW) {
-                motorStop();
-                resetPosition();
-            } else if (buttonUpState == LOW) {
-                motorUp();
-            } else if (buttonDownState == LOW) {
-                motorDown();
-            } else {
-                motorStop();
-            }
+        if (buttonUpState == LOW && buttonDownState == LOW) {
+            motorStop();
+            resetPosition();
+        } else if (positionHasChanged() && getPosition() == 0) {
+            buttonLockout();
+            motorStop();
+        } else if (buttonUpState == LOW) {
+            motorUp();
+        } else if (!buttonsLocked && buttonDownState == LOW) {
+            motorDown();
+        } else {
+            motorStop();
         }
         if (wasMoving && !isMoving) {
             storePosition();

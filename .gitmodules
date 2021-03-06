@@ -3,4 +3,7 @@
 	url = git@github.com:coddingtonbear/BTS7960Library.git
 [submodule "firmware/lib/Arduino-SerialCommand"]
 	path = firmware/lib/Arduino-SerialCommand
-	url = git@github.com:coddingtonbear/Arduino-SerialCommand.git
+    url = git@github.com:coddingtonbear/Arduino-SerialCommand.git
+[submodule "firmware/lib/Bounce2"]
+    path = firmware/lib/Bounce2
+    url = git@github.com:thomasfredericks/Bounce2.git
