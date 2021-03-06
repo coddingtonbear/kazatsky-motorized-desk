@@ -33,7 +33,7 @@
 
 BTS7960 motor(MOT_R_PWM, MOT_L_PWM, MOT_L_EN, MOT_R_EN);
 
-#define SPEED 255
+#define SPEED 128
 
 SerialCommand cmd;
 
