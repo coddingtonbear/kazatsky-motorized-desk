@@ -10,8 +10,6 @@ void motorUp();
 void motorDown();
 void motorStop();
 void motorSettle();
-bool motorIsStalled();
-void refreshStallTimeout();
 void buttonLockout(bool lockout = true);
 
 float getHeight();

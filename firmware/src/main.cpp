@@ -20,10 +20,8 @@
 #define MOT_R_PWM 6
 
 //#define MOT_PWR_VOLTAGE A5
-//#define ENABLE_HALL
 #define MOT_HALL 14
-#define MOT_HALL_DEBOUNCE_MS 25
-#define MOT_HALL_DEBOUNCE_STALL_TIMEOUT 250
+#define MOT_HALL_DEBOUNCE_MS 10
 
 #define LIMIT_MIN 15
 
@@ -56,25 +54,10 @@ bool wasMoving = false;
 bool buttonsLocked = false;
 
 unsigned long lastButtonCheck = 0;
-unsigned long stallTimeoutTimestamp = 0;
 
 Bounce buttonUp = Bounce();
 Bounce buttonDown = Bounce();
 Bounce hall = Bounce();
-
-bool motorIsStalled()
-{
-    if (isMoving && millis() > stallTimeoutTimestamp) {
-        return true;
-    }
-
-    return false;
-}
-
-void refreshStallTimeout()
-{
-    stallTimeoutTimestamp = millis() + MOT_HALL_DEBOUNCE_STALL_TIMEOUT;
-}
 
 void handleMotorPosition()
 {
@@ -84,34 +67,26 @@ void handleMotorPosition()
         resetPosition();
         motorStop();
         buttonLockout();
-        tick(3);
+        tick(5);
     } else {
         buttonLockout(false);
     }
 
-    #ifdef ENABLE_HALL
-        int currentHallState = hall.read();
-        lastPosition = position;
+    int currentHallState = hall.read();
+    if(currentHallState == HIGH) {
+        Serial.print("H");
+    }
+    lastPosition = position;
 
-        if (lastHallState == HIGH && currentHallState == LOW) {
-            if (up) {
-                position++;
-            } else {
-                position--;
-            }
+    if (lastHallState == HIGH && currentHallState == LOW) {
+        if (up) {
+            position++;
+        } else {
+            position--;
         }
-
-        if (lastHallState != currentHallState) {
-            lastHallState = currentHallState;
-            refreshStallTimeout();
-        }
-
-        if (motorIsStalled()) {
-            resetPosition();
-            motorStop();
-            buttonLockout();
-        }
-    #endif
+        lastHallState = currentHallState;
+    }
+    lastHallState = currentHallState;
 }
 
 bool positionHasChanged()
@@ -189,10 +164,6 @@ void toPosition(int target)
     }
 
     while (position != target && millis() < timeout) {
-        if (motorIsStalled()) {
-            return;
-        }
-
         if (position > target) {
             motorDown();
         } else {
@@ -221,10 +192,8 @@ void toHeight(float mm)
 
 void storePosition()
 {
-    #ifdef ENABLE_HALL
     EEPROM.update(EEPROM_STORE_SIGNAL, EEPROM_STORE_MAGIC);
     EEPROM.update(EEPROM_POSITION, position);
-    #endif
 }
 
 void setup()
@@ -277,9 +246,6 @@ void motorUp()
     if(motorDisabled) {
         return;
     }
-    if (!isMoving) {
-        refreshStallTimeout();
-    }
     if (movementStarted == 0) {
         movementStarted = millis();
     }
@@ -294,9 +260,6 @@ void motorDown()
 {
     if(motorDisabled) {
         return;
-    }
-    if (!isMoving) {
-        refreshStallTimeout();
     }
     if (movementStarted == 0) {
         movementStarted = millis();
@@ -343,9 +306,7 @@ void _loop()
 {
     buttonUp.update();
     buttonDown.update();
-    #ifdef ENABLE_HALL
-        hall.update();
-    #endif
+    hall.update();
 
     if (millis() - lastButtonCheck > 100) {
 
@@ -370,19 +331,17 @@ void _loop()
         if(isMoving) {
             if(stoppingStarted) {
                 Serial.print("<Stopping: speed=");
-                Serial.print(getRampedSettlingSpeed());
-                Serial.print(" ");
-                Serial.print("direction=");
-                Serial.print(up ? "up" : "down");
-                Serial.println(">");
             } else {
                 Serial.print("<Moving: speed=");
-                Serial.print(getRampedSpeed());
-                Serial.print(" ");
-                Serial.print("direction=");
-                Serial.print(up ? "up" : "down");
-                Serial.println(">");
             }
+            Serial.print(stoppingStarted ? getRampedSettlingSpeed() : getRampedSpeed());
+            Serial.print(" position=");
+            Serial.print(getPosition());
+            Serial.print(" height=");
+            Serial.print(getHeight());
+            Serial.print(" direction=");
+            Serial.print(up ? "up" : "down");
+            Serial.println(">");
         }
         if (wasMoving && !isMoving) {
             storePosition();
