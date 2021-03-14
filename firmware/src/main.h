@@ -9,6 +9,7 @@ void cmdGetVoltage();
 void motorUp();
 void motorDown();
 void motorStop();
+void motorSettle();
 bool motorIsStalled();
 void refreshStallTimeout();
 void buttonLockout(bool lockout = true);
@@ -21,6 +22,9 @@ void toPosition(int);
 void handleMotorPosition();
 void resetPosition();
 void storePosition();
+
+uint8_t getRampedSpeed();
+uint8_t getRampedSettlingSpeed();
 
 void tick(uint8_t count = 1);
 

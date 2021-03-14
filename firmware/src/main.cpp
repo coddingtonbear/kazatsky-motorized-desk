@@ -33,6 +33,8 @@
 
 BTS7960 motor(MOT_R_PWM, MOT_L_PWM, MOT_L_EN, MOT_R_EN);
 
+#define SPEED_SETTLE_RAMP 500
+#define SPEED_RAMP 1000
 #define SPEED 175
 
 #define TICK_ON 100
@@ -46,6 +48,9 @@ bool up = true;
 uint8_t position = 0;
 uint8_t lastPosition = 0;
 
+bool motorDisabled = false;
+unsigned long stoppingStarted = 0;
+unsigned long movementStarted = 0;
 bool isMoving = false;
 bool wasMoving = false;
 bool buttonsLocked = false;
@@ -151,8 +156,6 @@ void tick(uint8_t count)
         motor.disable();
         delay(TICK_INTERVAL);
     }
-
-    motor.setSpeed(SPEED);
 }
 
 void cmdToHeight()
@@ -228,8 +231,6 @@ void setup()
 {
     pinMode(LIMIT_MIN, INPUT_PULLUP);
 
-    tick(3);
-
     buttonUp.attach(BUTTON_UP, INPUT_PULLUP);
     buttonDown.attach(BUTTON_DOWN, INPUT_PULLUP);
     hall.attach(MOT_HALL, INPUT);
@@ -253,34 +254,82 @@ void setup()
     } else {
         position = 0;
     }
+
+    // Safety machinery
+    if (digitalRead(BUTTON_UP) == LOW && digitalRead(BUTTON_DOWN) == LOW) {
+        motorDisabled = true;
+        tick(10);
+    } else {
+        tick(3);
+    }
+}
+
+uint8_t getRampedSpeed() {
+    return float(SPEED) * min(1, float(millis() - movementStarted) / float(SPEED_RAMP));
+}
+
+uint8_t getRampedSettlingSpeed() {
+    return float(getRampedSpeed()) * (1 - min(1, float(millis() - stoppingStarted) / float(SPEED_SETTLE_RAMP)));
 }
 
 void motorUp()
 {
+    if(motorDisabled) {
+        return;
+    }
     if (!isMoving) {
         refreshStallTimeout();
     }
+    if (movementStarted == 0) {
+        movementStarted = millis();
+    }
 
     motor.enable();
-    motor.setSpeed(SPEED);
+    motor.setSpeed(getRampedSpeed());
     isMoving = true;
     up = true;
 }
 
 void motorDown()
 {
+    if(motorDisabled) {
+        return;
+    }
     if (!isMoving) {
         refreshStallTimeout();
     }
+    if (movementStarted == 0) {
+        movementStarted = millis();
+    }
 
     motor.enable();
-    motor.setSpeed(-1 * SPEED);
+    motor.setSpeed(-1 * getRampedSpeed());
     isMoving = true;
     up = false;
 }
 
+void motorSettle() {
+    if(motorDisabled || !isMoving) {
+        motorStop();
+        return;
+    }
+    if (stoppingStarted == 0) {
+        stoppingStarted = millis();
+    }
+
+    int speed = getRampedSettlingSpeed() * (up ? 1 : -1);
+    if (speed == 0) {
+        stoppingStarted = 0;
+        motorStop();
+    } else {
+        motor.enable();
+        motor.setSpeed(speed);
+    }
+}
+
 void motorStop()
 {
+    movementStarted = 0;
     isMoving = false;
     motor.stop();
 }
@@ -299,6 +348,7 @@ void _loop()
     #endif
 
     if (millis() - lastButtonCheck > 100) {
+
         int buttonUpState = buttonUp.read();
         int buttonDownState = buttonDown.read();
 
@@ -315,7 +365,24 @@ void _loop()
         } else if (!buttonsLocked && buttonDownState == LOW) {
             motorDown();
         } else {
-            motorStop();
+            motorSettle();
+        }
+        if(isMoving) {
+            if(stoppingStarted) {
+                Serial.print("<Stopping: speed=");
+                Serial.print(getRampedSettlingSpeed());
+                Serial.print(" ");
+                Serial.print("direction=");
+                Serial.print(up ? "up" : "down");
+                Serial.println(">");
+            } else {
+                Serial.print("<Moving: speed=");
+                Serial.print(getRampedSpeed());
+                Serial.print(" ");
+                Serial.print("direction=");
+                Serial.print(up ? "up" : "down");
+                Serial.println(">");
+            }
         }
         if (wasMoving && !isMoving) {
             storePosition();
